@@ -10,12 +10,12 @@ const basic = Object.groupBy([0, 2, 8], x => x < 5 ? 'small' : 'large');
 >      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >Object.groupBy([0, 2, 8], x => x < 5 ? 'small' : 'large') : Partial<Record<"small" | "large", number[]>>
 >                                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >Object : ObjectConstructor
 >       : ^^^^^^^^^^^^^^^^^
->groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >[0, 2, 8] : number[]
 >          : ^^^^^^^^
 >0 : 0
@@ -42,16 +42,16 @@ const basic = Object.groupBy([0, 2, 8], x => x < 5 ? 'small' : 'large');
 >        : ^^^^^^^
 
 const chars = Object.groupBy('a string', c => c);
->chars : Partial<Record<string, string[]>>
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Object.groupBy('a string', c => c) : Partial<Record<string, string[]>>
->                                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>chars : Record<string, string[]>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^
+>Object.groupBy('a string', c => c) : Record<string, string[]>
+>                                   : ^^^^^^^^^^^^^^^^^^^^^^^^
+>Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >Object : ObjectConstructor
 >       : ^^^^^^^^^^^^^^^^^
->groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >'a string' : "a string"
 >           : ^^^^^^^^^^
 >c => c : (c: string) => string
@@ -61,13 +61,28 @@ const chars = Object.groupBy('a string', c => c);
 >c : string
 >  : ^^^^^^
 
-type Employee = { name: string, role: 'ic' | 'manager' }
+enum RoleEnum {
+>RoleEnum : RoleEnum
+>         : ^^^^^^^^
+
+    IC,
+>IC : RoleEnum.IC
+>   : ^^^^^^^^^^^
+
+    MANAGER
+>MANAGER : RoleEnum.MANAGER
+>        : ^^^^^^^^^^^^^^^^
+}
+
+type Employee = { name: string, role: 'ic' | 'manager', roleEnum: RoleEnum };
 >Employee : Employee
 >         : ^^^^^^^^
 >name : string
 >     : ^^^^^^
 >role : "ic" | "manager"
 >     : ^^^^^^^^^^^^^^^^
+>roleEnum : RoleEnum
+>         : ^^^^^^^^
 
 const employees: Set<Employee> = new Set();
 >employees : Set<Employee>
@@ -77,17 +92,41 @@ const employees: Set<Employee> = new Set();
 >Set : SetConstructor
 >    : ^^^^^^^^^^^^^^
 
+const byName = Object.groupBy(employees, x => x.name);
+>byName : Record<string, Employee[]>
+>       : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Object.groupBy(employees, x => x.name) : Record<string, Employee[]>
+>                                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
+>Object : ObjectConstructor
+>       : ^^^^^^^^^^^^^^^^^
+>groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
+>employees : Set<Employee>
+>          : ^^^^^^^^^^^^^
+>x => x.name : (x: Employee) => string
+>            : ^ ^^^^^^^^^^^^^^^^^^^^^
+>x : Employee
+>  : ^^^^^^^^
+>x.name : string
+>       : ^^^^^^
+>x : Employee
+>  : ^^^^^^^^
+>name : string
+>     : ^^^^^^
+
 const byRole = Object.groupBy(employees, x => x.role);
 >byRole : Partial<Record<"ic" | "manager", Employee[]>>
 >       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >Object.groupBy(employees, x => x.role) : Partial<Record<"ic" | "manager", Employee[]>>
 >                                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >Object : ObjectConstructor
 >       : ^^^^^^^^^^^^^^^^^
->groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >employees : Set<Employee>
 >          : ^^^^^^^^^^^^^
 >x => x.role : (x: Employee) => "ic" | "manager"
@@ -101,17 +140,41 @@ const byRole = Object.groupBy(employees, x => x.role);
 >role : "ic" | "manager"
 >     : ^^^^^^^^^^^^^^^^
 
+const byRoleEnum = Object.groupBy(employees, x => x.roleEnum);
+>byRoleEnum : Partial<Record<RoleEnum, Employee[]>>
+>           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Object.groupBy(employees, x => x.roleEnum) : Partial<Record<RoleEnum, Employee[]>>
+>                                           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
+>Object : ObjectConstructor
+>       : ^^^^^^^^^^^^^^^^^
+>groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
+>employees : Set<Employee>
+>          : ^^^^^^^^^^^^^
+>x => x.roleEnum : (x: Employee) => RoleEnum
+>                : ^ ^^^^^^^^^^^^^^^^^^^^^^^
+>x : Employee
+>  : ^^^^^^^^
+>x.roleEnum : RoleEnum
+>           : ^^^^^^^^
+>x : Employee
+>  : ^^^^^^^^
+>roleEnum : RoleEnum
+>         : ^^^^^^^^
+
 const byNonKey = Object.groupBy(employees, x => x);
 >byNonKey : Partial<Record<PropertyKey, Employee[]>>
 >         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >Object.groupBy(employees, x => x) : Partial<Record<PropertyKey, Employee[]>>
 >                                  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>Object.groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>               : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >Object : ObjectConstructor
 >       : ^^^^^^^^^^^^^^^^^
->groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => Partial<Record<K, T[]>>
->        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                       
+>groupBy : <K extends PropertyKey, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) => [K] extends [IsAnyStringOrNumber<K>] ? Record<K, T[]> : Partial<Record<K, T[]>>
+>        : ^ ^^^^^^^^^           ^^ ^^     ^^           ^^           ^^                             ^^^^^                                                                               
 >employees : Set<Employee>
 >          : ^^^^^^^^^^^^^
 >x => x : (x: Employee) => Employee
